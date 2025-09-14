@@ -41,6 +41,15 @@ const colorPalettes: { value: ColorPalette; label: string }[] = [
     { value: "neon", label: "Neon Glow" },
 ];
 
+const SectionHeader: React.FC<{ title: string; number: number; isOpen: boolean; onToggle: () => void; }> = ({ title, number, isOpen, onToggle }) => (
+    <button type="button" onClick={onToggle} className="w-full flex justify-between items-center text-left">
+      <h3 className="block text-sm font-medium text-brand-text-muted">
+        {number}. {title}
+      </h3>
+      <Icon name={isOpen ? 'chevronUp' : 'chevronDown'} className="w-5 h-5 text-brand-text-muted" />
+    </button>
+);
+
 export const ControlPanel: React.FC<ControlPanelProps> = ({ onGenerate, isLoading }) => {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
@@ -48,6 +57,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ onGenerate, isLoadin
   const [artStyle, setArtStyle] = useState<ArtStyle>('none');
   const [negativePrompt, setNegativePrompt] = useState('');
   const [colorPalette, setColorPalette] = useState<ColorPalette>('none');
+
+  const [isStylingOpen, setIsStylingOpen] = useState(true);
+  const [isRefinementsOpen, setIsRefinementsOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,88 +109,55 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ onGenerate, isLoadin
               placeholder={currentPlaceholder}
               className="w-full h-32 p-3 bg-brand-secondary border border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 resize-none text-brand-text placeholder-gray-500"
               disabled={isLoading}
+              required
             />
           </div>
 
-          <div>
-            <label htmlFor="artStyle" className="block text-sm font-medium text-brand-text-muted mb-2">
-              3. Choose an Art Style (Optional)
-            </label>
-            <div className="relative">
-               <select
-                  id="artStyle"
-                  value={artStyle}
-                  onChange={(e) => setArtStyle(e.target.value as ArtStyle)}
-                  className="w-full p-3 bg-brand-secondary border border-gray-600 rounded-lg appearance-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 text-brand-text"
-                  disabled={isLoading}
-               >
-                  {artStyles.map(style => (
-                      <option key={style.value} value={style.value}>{style.label}</option>
-                  ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-text-muted">
-                  <Icon name="chevronDown" className="w-5 h-5" />
-              </div>
-            </div>
+          <div className="border-t border-brand-secondary/50 pt-4">
+              <SectionHeader title="Styling Options (Optional)" number={3} isOpen={isStylingOpen} onToggle={() => setIsStylingOpen(v => !v)} />
+              {isStylingOpen && (
+                <div className="flex flex-col gap-4 mt-4">
+                    <div>
+                        <label htmlFor="artStyle" className="block text-xs font-medium text-brand-text-muted mb-1">Art Style</label>
+                        <div className="relative">
+                           <select id="artStyle" value={artStyle} onChange={(e) => setArtStyle(e.target.value as ArtStyle)} className="w-full p-3 bg-brand-secondary border border-gray-600 rounded-lg appearance-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 text-brand-text" disabled={isLoading}>
+                              {artStyles.map(style => (<option key={style.value} value={style.value}>{style.label}</option>))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-text-muted"><Icon name="chevronDown" className="w-5 h-5" /></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="colorPalette" className="block text-xs font-medium text-brand-text-muted mb-1">Color Palette</label>
+                        <div className="relative">
+                           <select id="colorPalette" value={colorPalette} onChange={(e) => setColorPalette(e.target.value as ColorPalette)} className="w-full p-3 bg-brand-secondary border border-gray-600 rounded-lg appearance-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 text-brand-text" disabled={isLoading}>
+                              {colorPalettes.map(palette => (<option key={palette.value} value={palette.value}>{palette.label}</option>))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-text-muted"><Icon name="chevronDown" className="w-5 h-5" /></div>
+                        </div>
+                    </div>
+                </div>
+              )}
           </div>
           
-          <div>
-            <label htmlFor="colorPalette" className="block text-sm font-medium text-brand-text-muted mb-2">
-              4. Choose a Color Palette (Optional)
-            </label>
-            <div className="relative">
-               <select
-                  id="colorPalette"
-                  value={colorPalette}
-                  onChange={(e) => setColorPalette(e.target.value as ColorPalette)}
-                  className="w-full p-3 bg-brand-secondary border border-gray-600 rounded-lg appearance-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 text-brand-text"
-                  disabled={isLoading}
-               >
-                  {colorPalettes.map(palette => (
-                      <option key={palette.value} value={palette.value}>{palette.label}</option>
-                  ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-text-muted">
-                  <Icon name="chevronDown" className="w-5 h-5" />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="negativePrompt" className="block text-sm font-medium text-brand-text-muted mb-2">
-              5. What to avoid? (Optional)
-            </label>
-            <input
-              type="text"
-              id="negativePrompt"
-              value={negativePrompt}
-              onChange={(e) => setNegativePrompt(e.target.value)}
-              placeholder="e.g., blurry, extra limbs, ugly"
-              className="w-full p-3 bg-brand-secondary border border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 text-brand-text placeholder-gray-500"
-              disabled={isLoading}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="aspectRatio" className="block text-sm font-medium text-brand-text-muted mb-2">
-              6. Choose aspect ratio
-            </label>
-            <div className="relative">
-               <select
-                  id="aspectRatio"
-                  value={aspectRatio}
-                  onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                  className="w-full p-3 bg-brand-secondary border border-gray-600 rounded-lg appearance-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 text-brand-text"
-                  disabled={isLoading}
-               >
-                  {aspectRatios.map(ratio => (
-                      <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
-                  ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-text-muted">
-                  <Icon name="chevronDown" className="w-5 h-5" />
-              </div>
-            </div>
+          <div className="border-t border-brand-secondary/50 pt-4">
+               <SectionHeader title="Advanced Refinements (Optional)" number={4} isOpen={isRefinementsOpen} onToggle={() => setIsRefinementsOpen(v => !v)} />
+               {isRefinementsOpen && (
+                <div className="flex flex-col gap-4 mt-4">
+                    <div>
+                        <label htmlFor="negativePrompt" className="block text-xs font-medium text-brand-text-muted mb-1">What to avoid?</label>
+                        <input type="text" id="negativePrompt" value={negativePrompt} onChange={(e) => setNegativePrompt(e.target.value)} placeholder="e.g., blurry, extra limbs, ugly" className="w-full p-3 bg-brand-secondary border border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 text-brand-text placeholder-gray-500" disabled={isLoading} />
+                    </div>
+                    <div>
+                        <label htmlFor="aspectRatio" className="block text-xs font-medium text-brand-text-muted mb-1">Aspect Ratio</label>
+                        <div className="relative">
+                           <select id="aspectRatio" value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as AspectRatio)} className="w-full p-3 bg-brand-secondary border border-gray-600 rounded-lg appearance-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition duration-200 text-brand-text" disabled={isLoading}>
+                              {aspectRatios.map(ratio => (<option key={ratio.value} value={ratio.value}>{ratio.label}</option>))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-text-muted"><Icon name="chevronDown" className="w-5 h-5" /></div>
+                        </div>
+                    </div>
+                </div>
+               )}
           </div>
         </div>
 

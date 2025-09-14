@@ -32,22 +32,23 @@ export async function generateImagesFromApi(
   colorPalette: ColorPalette
 ): Promise<string[]> {
   try {
-    const promptParts = [getPromptPrefix(preset), prompt];
+    let finalPrompt = `${getPromptPrefix(preset)}${prompt}`;
 
+    const styleDetails: string[] = [];
     if (artStyle !== 'none') {
-      const styleString = artStyle.replace('-', ' ');
-      promptParts.push(`, in a ${styleString} style`);
+      styleDetails.push(`art style: ${artStyle.replace('-', ' ')}`);
     }
-    
     if (colorPalette !== 'none') {
-        promptParts.push(`, with a ${colorPalette} color palette`);
+        styleDetails.push(`color palette: ${colorPalette}`);
+    }
+
+    if (styleDetails.length > 0) {
+      finalPrompt += `\n\n--- Style Attributes ---\n${styleDetails.join(', ')}.`;
     }
 
     if (negativePrompt) {
-      promptParts.push(`. Negative prompt: avoid ${negativePrompt}`);
+      finalPrompt += `\n\n--- Negative Prompt (what to exclude) ---\nAvoid the following: ${negativePrompt}.`;
     }
-
-    const finalPrompt = promptParts.join('');
 
     const response = await ai.models.generateImages({
       model: 'imagen-4.0-generate-001',
